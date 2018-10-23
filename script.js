@@ -6,8 +6,17 @@ const constraints = {
   video: true
 };
 
-const video = document.querySelector('video');
+const video = document.querySelector('#videostream');
+let mediaStream;
 
-navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+document.querySelector('#capture-button').onclick = function () {
+  navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    mediaStream = stream;
     video.srcObject = stream;
-});
+  });
+};
+
+document.querySelector('#stop-button').onclick = function () {
+  video.pause();
+  mediaStream.stop();
+};
