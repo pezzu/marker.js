@@ -7,6 +7,8 @@ const constraints = {
 };
 
 const video = document.querySelector('#video');
+const canvas = document.getElementById('canvas');
+const context = canvas.getContext('2d');
 
 function initVideo() {
   navigator.mediaDevices.getUserMedia(constraints).then(stream => {
@@ -31,23 +33,41 @@ video.onplay = function () {
 };
 
 function resizeCanvasTo(element) {
-	const w = element.offsetWidth;
-  const h = element.offsetHeight;
-  const cv = document.getElementById("canvas");
-  cv.width = w;
-  cv.height =h;
+  canvas.width = element.offsetWidth;
+  canvas.height = element.offsetHeight;
+}
+
+
+const MARKER_SIZE = 6;
+const markers = [];
+
+function addMarker(x, y) {
+  markers.push({ x: x, y: y });
+}
+
+function drawMarkers() {
+  markers.forEach(marker => { 
+    const color = 'red';
+    context.fillStyle = color;
+    context.strokeStyle = color;
+    context.fillRect(marker.x - MARKER_SIZE / 2, marker.y - MARKER_SIZE / 2, MARKER_SIZE, MARKER_SIZE);
+  });
+}
+
+const dim = canvas.getBoundingClientRect();
+canvas.onclick = function (event) {
+  addMarker(event.clientX - dim.left, event.clientY - dim.top);
 }
 
 
 function doTrack() {
-  var canvas = document.getElementById('canvas');
-  var context = canvas.getContext('2d');
-
   const colorTracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
 
   colorTracker.on('track', function (event) {
     context.clearRect(0, 0, canvas.width, canvas.height);
   
+    drawMarkers();
+
     if (event.data.length === 0) {
       // No colorTracker were detected in this frame.
     } else {
