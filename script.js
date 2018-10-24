@@ -42,7 +42,7 @@ const MARKER_SIZE = 6;
 
 const dim = canvas.getBoundingClientRect();
 canvas.onclick = function (event) {
-  tracker.addMarker(event.clientX - dim.left, event.clientY - dim.top);
+  tagTracker.addMarker(event.clientX - dim.left, event.clientY - dim.top);
 }
 
 
@@ -75,35 +75,14 @@ TagTracker.prototype.drawMarkers = function () {
 }
 
 
-const tracker = new TagTracker();
+const tagTracker = new TagTracker();
 
-tracker.on('track', function (event) {
+tagTracker.on('track', function (event) {
   context.clearRect(0, 0, canvas.width, canvas.height);
-  this.drawMarkers();
+  tagTracker.drawMarkers();
   event.data.forEach(rect => {
   
   });
 });
 
-
-function doTrack() {
-  const colorTracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
-
-  colorTracker.on('track', function (event) { 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (event.data.length === 0) {
-      // No colorTracker were detected in this frame.
-    } else {
-      event.data.forEach(function (rect) {
-        context.strokeStyle = rect.color;
-        context.strokeRect(rect.x, rect.y, rect.width, rect.height);
-        console.log(rect.x, rect.y, rect.height, rect.width, rect.color);
-      });
-    }
-  });
-
-  return tracking.track('#video', colorTracker);
-}
-
-// const tracker = doTrack();
+const tracker = tracking.track('#video', tagTracker);
