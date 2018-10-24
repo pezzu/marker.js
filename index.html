@@ -8,11 +8,15 @@
 </head>
 <body>
 
-  <div id="main">
-    <video id="videostream" autoplay></video>
+  <div class="container">
+    <div class="video-frame">
+      <video id="video" autoplay></video>
+      <canvas id="canvas"></canvas>
+    </div>
     <p><button class="button" id="capture-button">Captute</button><button class="button" id="stop-button">Stop</button></p>
   </div>
 
+  <script src="lib/tracking.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

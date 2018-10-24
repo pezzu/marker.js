@@ -1,5 +1,25 @@
-#main {
+.container {
     text-align:center;
+}
+
+.video-frame {
+    position: relative; 
+    width: 640px; 
+    height: 480px;
+    margin: auto;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* background-color:rgb(255,0,0,0.2); */
+}
+
+#video {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .button {
