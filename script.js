@@ -39,14 +39,34 @@ function resizeCanvasTo(element) {
 
 
 const MARKER_SIZE = 6;
-const markers = [];
 
-function addMarker(x, y) {
-  markers.push({ x: x, y: y });
+const dim = canvas.getBoundingClientRect();
+canvas.onclick = function (event) {
+  tracker.addMarker(event.clientX - dim.left, event.clientY - dim.top);
 }
 
-function drawMarkers() {
-  markers.forEach(marker => { 
+
+const TagTracker = function() {
+  TagTracker.base(this, 'constructor');
+  this.tags = [];
+}
+
+tracking.inherits(TagTracker, tracking.Tracker);
+
+TagTracker.prototype.track = function(pixels, width, height) {
+  const results = [];
+
+  this.emit('track', {
+    data: results
+  });
+}
+
+TagTracker.prototype.addMarker = function (x, y) {
+  this.tags.push({ x: x, y: y });
+}
+
+TagTracker.prototype.drawMarkers = function () {
+  this.tags.forEach(marker => { 
     const color = 'red';
     context.fillStyle = color;
     context.strokeStyle = color;
@@ -54,19 +74,23 @@ function drawMarkers() {
   });
 }
 
-const dim = canvas.getBoundingClientRect();
-canvas.onclick = function (event) {
-  addMarker(event.clientX - dim.left, event.clientY - dim.top);
-}
+
+const tracker = new TagTracker();
+
+tracker.on('track', function (event) {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  this.drawMarkers();
+  event.data.forEach(rect => {
+  
+  });
+});
 
 
 function doTrack() {
   const colorTracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
 
-  colorTracker.on('track', function (event) {
+  colorTracker.on('track', function (event) { 
     context.clearRect(0, 0, canvas.width, canvas.height);
-  
-    drawMarkers();
 
     if (event.data.length === 0) {
       // No colorTracker were detected in this frame.
@@ -82,4 +106,4 @@ function doTrack() {
   return tracking.track('#video', colorTracker);
 }
 
-const tracker = doTrack();
+// const tracker = doTrack();
