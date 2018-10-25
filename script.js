@@ -54,15 +54,22 @@ function drawMarker(marker) {
   context.fillRect(marker.x - MARKER_SIZE / 2, marker.y - MARKER_SIZE / 2, MARKER_SIZE, MARKER_SIZE);
 }
 
+function plotFeatures(keypoints) {
+  for (let i = 0; i < keypoints.length; i += 2) {
+    context.fillStyle = 'red';
+    context.fillRect(keypoints[i], keypoints[i + 1], 3, 3);
+  } 
+}
 
 const TagTracker = function() {
   TagTracker.base(this, 'constructor');
   this.tags = [];
+  this.bindings = [];
 }
 tracking.inherits(TagTracker, tracking.Tracker);
 
 TagTracker.prototype.blur = 3;
-TagTracker.prototype.fastThreshold = 60;
+TagTracker.prototype.fastThreshold = 5;
 TagTracker.prototype.numberOfBindings = 4;
 
 TagTracker.prototype.track = function(pixels, width, height) {  
@@ -70,6 +77,8 @@ TagTracker.prototype.track = function(pixels, width, height) {
   const grayscale = tracking.Image.grayscale(blur, width, height);
   const keypoints = tracking.Fast.findCorners(grayscale, width, height, this.fastThreshold);
   const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
+
+  this.bindings = keypoints;
 
   const results = [];
   this.tags.forEach(tag => {
@@ -107,6 +116,9 @@ const tagTracker = new TagTracker();
 
 tagTracker.on('track', function (event) {
   context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  plotFeatures(this.bindings);
+  
   event.data.forEach(drawMarker);
 });
 
