@@ -39,8 +39,10 @@ function resizeCanvasTo(element) {
 }
 
 canvas.onclick = function (event) {
-  const dim = canvas.getBoundingClientRect();
-  tagTracker.addTag(event.clientX - dim.left, event.clientY - dim.top);
+  const dim = canvas.getBoundingClientRect(); 
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+  tagTracker.addTag(event.clientX - dim.left, event.clientY - dim.top, imageData.data, canvas.width, canvas.height);
 }
 
 function drawMarker(marker) {
@@ -57,19 +59,48 @@ const TagTracker = function() {
   TagTracker.base(this, 'constructor');
   this.tags = [];
 }
-
 tracking.inherits(TagTracker, tracking.Tracker);
 
-TagTracker.prototype.track = function(pixels, width, height) {
-  const results = this.tags;
+TagTracker.prototype.blur = 3;
+TagTracker.prototype.fastThreshold = 60;
+TagTracker.prototype.numberOfBindings = 4;
+
+TagTracker.prototype.track = function(pixels, width, height) {  
+  const blur = tracking.Image.blur(pixels, width, height, this.blur);
+  const grayscale = tracking.Image.grayscale(blur, width, height);
+  const keypoints = tracking.Fast.findCorners(grayscale, width, height, this.fastThreshold);
+  const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
+
+  const results = [];
+  this.tags.forEach(tag => {
+    const matches = tracking.Brief.reciprocalMatch(keypoints, descriptors, tag.keypoints, tag.descriptors);
+    matches.sort((a, b) => b.confidence - a.confidence);
+    
+    //ToDo: use smart algorithm to bind, not just avarage
+    let dx = 0;
+    let dy = 0;
+    for (i = 0; i < this.numberOfBindings; i++) {
+      dx += matches[i].keypoint2[0] - matches[i].keypoint1[0];
+      dy += matches[i].keypoint2[1] - matches[i].keypoint1[1];
+    }
+    dx = dx / this.numberOfBindings;
+    dy = dy / this.numberOfBindings;
+
+    results.push({ x: tag.x + dx, y: tag.y + dy });
+  });
 
   this.emit('track', {
     data: results
   });
 }
 
-TagTracker.prototype.addTag = function (x, y) {
-  this.tags.push({ x: x, y: y });
+TagTracker.prototype.addTag = function (x, y, pixels, width, height) {
+  const blur = tracking.Image.blur(pixels, width, height, this.blur);
+  const grayscale = tracking.Image.grayscale(blur, width, height);
+  const keypoints = tracking.Fast.findCorners(grayscale, width, height, this.fastThreshold);
+  const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
+  
+  this.tags.push({ x: x, y: y, keypoints: keypoints, descriptors: descriptors });
 }
 
 const tagTracker = new TagTracker();
