@@ -1,3 +1,27 @@
+.header-area { grid-area: header; }
+.left-area { grid-area: menu; }
+.main-area { grid-area: main; }
+.right-area { grid-area: right; }
+.footer-area { grid-area: footer; }
+
+.grid-container {
+    display: grid;
+    grid-template-areas:
+      'header header header header header'
+      'menu main main main right'
+      'footer footer footer footer footer';
+    grid-gap: 5px;
+    padding: 10px;
+}
+
+.controls {
+    text-align: center;
+}
+
+.capture {
+    text-align: center;
+}
+
 .container {
     text-align:center;
 }
