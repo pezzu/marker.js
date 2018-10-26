@@ -17,14 +17,11 @@
       <p><button class="button" id="capture-button">Captute</button><button class="button" id="stop-button">Stop</button></p>
     </div>
     <div class="controls right-area">
-      <p>FAST Threshold:</p>
-      <input type="range" min="1" max="100" value="10">
-      
-      <p>Blur radius:</p>
-      <input type="range" min="2" max="30" value="3">
-      
-      <p>Number of bindings:</p>
-      <input type="range" min="1" max="100" value="10">
+      <h3>Internal parameters</h3>
+      <p>FAST threshold: <input id="threshold" type="number" min="1" max="100"></p>
+      <p>Blur radius: <input id="blur" type="number" min="2" max="30"></p>
+      <p>Number of bindings: <input id="numberOfBindings" type="number" min="1" max="100"></p>
+      <p>Show corners <input id="showCorners" type="checkbox"></p>
     </div>
   </div>
 

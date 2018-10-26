@@ -15,15 +15,11 @@
 }
 
 .controls {
-    text-align: center;
+    text-align: left;
 }
 
 .capture {
     text-align: center;
-}
-
-.container {
-    text-align:center;
 }
 
 .video-frame {

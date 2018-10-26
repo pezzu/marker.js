@@ -55,11 +55,38 @@ function drawMarker(marker) {
 }
 
 function plotFeatures(keypoints) {
-  for (let i = 0; i < keypoints.length; i += 2) {
-    context.fillStyle = 'red';
-    context.fillRect(keypoints[i], keypoints[i + 1], 3, 3);
-  } 
+  if (options.showCorners) {
+    for (let i = 0; i < keypoints.length; i += 2) {
+      context.fillStyle = 'red';
+      context.fillRect(keypoints[i], keypoints[i + 1], 3, 3);
+    }
+  }
 }
+
+const options = new function () {
+  this.addBinding = (name, value, element) => {
+    Object.defineProperty(this, name, {
+      enumerable: true,
+      get: () => element.value,
+      set: (value) => element.value = value
+    });
+    this[name] = value;
+  };
+
+  this.addBoolean = (name, value, element) => {
+    Object.defineProperty(this, name, {
+      enumerable: true,
+      get: () => element.checked,
+      set: (value) => element.checked = value
+    });
+    this[name] = value;
+  };
+};
+
+options.addBinding('blur', 3, document.getElementById('blur'));
+options.addBinding('fastThreshold', 10, document.getElementById('threshold'));
+options.addBinding('numberOfBindings', 4, document.getElementById('numberOfBindings'));
+options.addBoolean('showCorners', true, document.getElementById('showCorners'));
 
 const TagTracker = function() {
   TagTracker.base(this, 'constructor');
@@ -68,14 +95,10 @@ const TagTracker = function() {
 }
 tracking.inherits(TagTracker, tracking.Tracker);
 
-TagTracker.prototype.blur = 3;
-TagTracker.prototype.fastThreshold = 5;
-TagTracker.prototype.numberOfBindings = 4;
-
 TagTracker.prototype.track = function(pixels, width, height) {  
-  const blur = tracking.Image.blur(pixels, width, height, this.blur);
+  const blur = tracking.Image.blur(pixels, width, height, options.blur);
   const grayscale = tracking.Image.grayscale(blur, width, height);
-  const keypoints = tracking.Fast.findCorners(grayscale, width, height, this.fastThreshold);
+  const keypoints = tracking.Fast.findCorners(grayscale, width, height, options.fastThreshold);
   const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
 
   this.bindings = keypoints;
@@ -88,12 +111,12 @@ TagTracker.prototype.track = function(pixels, width, height) {
     //ToDo: use smart algorithm to bind, not just avarage
     let dx = 0;
     let dy = 0;
-    for (i = 0; i < this.numberOfBindings; i++) {
+    for (i = 0; i < options.numberOfBindings; i++) {
       dx += matches[i].keypoint2[0] - matches[i].keypoint1[0];
       dy += matches[i].keypoint2[1] - matches[i].keypoint1[1];
     }
-    dx = dx / this.numberOfBindings;
-    dy = dy / this.numberOfBindings;
+    dx = dx / options.numberOfBindings;
+    dy = dy / options.numberOfBindings;
 
     results.push({ x: tag.x + dx, y: tag.y + dy });
   });
@@ -104,9 +127,9 @@ TagTracker.prototype.track = function(pixels, width, height) {
 }
 
 TagTracker.prototype.addTag = function (x, y, pixels, width, height) {
-  const blur = tracking.Image.blur(pixels, width, height, this.blur);
+  const blur = tracking.Image.blur(pixels, width, height, options.blur);
   const grayscale = tracking.Image.grayscale(blur, width, height);
-  const keypoints = tracking.Fast.findCorners(grayscale, width, height, this.fastThreshold);
+  const keypoints = tracking.Fast.findCorners(grayscale, width, height, options.fastThreshold);
   const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
   
   this.tags.push({ x: x, y: y, keypoints: keypoints, descriptors: descriptors });
