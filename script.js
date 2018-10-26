@@ -29,6 +29,7 @@ document.querySelector('#stop-button').onclick = function () {
   video.pause();
 };
 
+// ToDo: resize should be done on resize
 video.onplay = function () {
   resizeCanvasTo(this);
 };
@@ -40,14 +41,12 @@ function resizeCanvasTo(element) {
 
 canvas.onclick = function (event) {
   const dim = canvas.getBoundingClientRect(); 
-  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-  tagTracker.addTag(event.clientX - dim.left, event.clientY - dim.top, imageData.data, canvas.width, canvas.height);
+  tagTracker.addTag(event.clientX - dim.left, event.clientY - dim.top);
 }
 
 function drawMarker(marker) {
-  const MARKER_SIZE = 6;
-  const color = 'red';
+  const MARKER_SIZE = 8;
+  const color = 'yellow';
 
   context.fillStyle = color;
   context.strokeStyle = color;
@@ -105,20 +104,24 @@ TagTracker.prototype.track = function(pixels, width, height) {
 
   const results = [];
   this.tags.forEach(tag => {
-    const matches = tracking.Brief.reciprocalMatch(keypoints, descriptors, tag.keypoints, tag.descriptors);
-    matches.sort((a, b) => b.confidence - a.confidence);
+    if (tag.keypoints) {
+      const matches = tracking.Brief.reciprocalMatch(keypoints, descriptors, tag.keypoints, tag.descriptors);
+      matches.sort((a, b) => b.confidence - a.confidence);
     
-    //ToDo: use smart algorithm to bind, not just avarage
-    let dx = 0;
-    let dy = 0;
-    for (i = 0; i < options.numberOfBindings; i++) {
-      dx += matches[i].keypoint2[0] - matches[i].keypoint1[0];
-      dy += matches[i].keypoint2[1] - matches[i].keypoint1[1];
+      //ToDo: use smart algorithm to bind, not just avarage
+      let dx = 0;
+      let dy = 0;
+      for (i = 0; i < options.numberOfBindings; i++) {
+        dx += matches[i].keypoint2[0] - matches[i].keypoint1[0];
+        dy += matches[i].keypoint2[1] - matches[i].keypoint1[1];
+      }
+      tag.x -= dx / options.numberOfBindings;
+      tag.y -= dy / options.numberOfBindings;
     }
-    dx = dx / options.numberOfBindings;
-    dy = dy / options.numberOfBindings;
 
-    results.push({ x: tag.x + dx, y: tag.y + dy });
+    tag.keypoints = keypoints;
+    tag.descriptors = descriptors;
+    results.push({x: tag.x, y: tag.y});
   });
 
   this.emit('track', {
@@ -126,13 +129,8 @@ TagTracker.prototype.track = function(pixels, width, height) {
   });
 }
 
-TagTracker.prototype.addTag = function (x, y, pixels, width, height) {
-  const blur = tracking.Image.blur(pixels, width, height, options.blur);
-  const grayscale = tracking.Image.grayscale(blur, width, height);
-  const keypoints = tracking.Fast.findCorners(grayscale, width, height, options.fastThreshold);
-  const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
-  
-  this.tags.push({ x: x, y: y, keypoints: keypoints, descriptors: descriptors });
+TagTracker.prototype.addTag = function (x, y) {
+  this.tags.push({ x: x, y: y});
 }
 
 const tagTracker = new TagTracker();
