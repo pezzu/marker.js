@@ -29,8 +29,7 @@ document.querySelector('#stop-button').onclick = function () {
   video.pause();
 };
 
-// ToDo: resize should be done on resize
-video.onplay = function () {
+video.onresize = function () {
   resizeCanvasTo(this);
 };
 
