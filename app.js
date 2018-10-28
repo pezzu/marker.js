@@ -3,7 +3,7 @@ function hasGetUserMedia() {
 }
 
 
-const video = document.querySelector('#video');
+const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
@@ -19,12 +19,12 @@ function initVideo() {
 
 initVideo();
 
-document.querySelector('#capture-button').onclick = function () {  
+document.getElementById('capture-button').onclick = function () {  
   video.play();
   tracker.run();
 };
 
-document.querySelector('#stop-button').onclick = function () {  
+document.getElementById('stop-button').onclick = function () {  
   tracker.stop();
   video.pause();
 };
@@ -86,53 +86,9 @@ options.addBinding('fastThreshold', 10, document.getElementById('threshold'));
 options.addBinding('numberOfBindings', 4, document.getElementById('numberOfBindings'));
 options.addBoolean('showCorners', true, document.getElementById('showCorners'));
 
-const TagTracker = function() {
-  TagTracker.base(this, 'constructor');
-  this.tags = [];
-  this.bindings = [];
-}
-tracking.inherits(TagTracker, tracking.Tracker);
 
-TagTracker.prototype.track = function(pixels, width, height) {  
-  const blur = tracking.Image.blur(pixels, width, height, options.blur);
-  const grayscale = tracking.Image.grayscale(blur, width, height);
-  const keypoints = tracking.Fast.findCorners(grayscale, width, height, options.fastThreshold);
-  const descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
 
-  this.bindings = keypoints;
-
-  const results = [];
-  this.tags.forEach(tag => {
-    if (tag.keypoints) {
-      const matches = tracking.Brief.reciprocalMatch(keypoints, descriptors, tag.keypoints, tag.descriptors);
-      matches.sort((a, b) => b.confidence - a.confidence);
-    
-      //ToDo: use smart algorithm to bind, not just avarage
-      let dx = 0;
-      let dy = 0;
-      for (i = 0; i < options.numberOfBindings; i++) {
-        dx += matches[i].keypoint2[0] - matches[i].keypoint1[0];
-        dy += matches[i].keypoint2[1] - matches[i].keypoint1[1];
-      }
-      tag.x -= dx / options.numberOfBindings;
-      tag.y -= dy / options.numberOfBindings;
-    }
-
-    tag.keypoints = keypoints;
-    tag.descriptors = descriptors;
-    results.push({x: tag.x, y: tag.y});
-  });
-
-  this.emit('track', {
-    data: results
-  });
-}
-
-TagTracker.prototype.addTag = function (x, y) {
-  this.tags.push({ x: x, y: y});
-}
-
-const tagTracker = new TagTracker();
+const tagTracker = new TagTracker(options);
 
 tagTracker.on('track', function (event) {
   context.clearRect(0, 0, canvas.width, canvas.height);
