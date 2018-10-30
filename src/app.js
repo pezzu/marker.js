@@ -43,23 +43,12 @@ canvas.onclick = function (event) {
   tagTracker.addTag(event.clientX - dim.left, event.clientY - dim.top);
 }
 
-function drawMarker(marker) {
-  const MARKER_SIZE = 8;
-  const color = 'yellow';
-
+function plotMarkers(markers, color, size) {
   context.fillStyle = color;
-  context.strokeStyle = color;
-  context.fillRect(marker.x - MARKER_SIZE / 2, marker.y - MARKER_SIZE / 2, MARKER_SIZE, MARKER_SIZE);
-}
-
-function plotFeatures(keypoints) {
-  if (options.showCorners) {
-    for (let i = 0; i < keypoints.length; i += 2) {
-      context.fillStyle = 'red';
-      context.fillRect(keypoints[i], keypoints[i + 1], 3, 3);
-    }
-  }
-}
+  markers.forEach(marker => {
+    context.fillRect(marker.x - Math.floor(size / 2), marker.y - Math.floor(size / 2), size, size);
+  });
+} 
 
 const options = new function () {
   this.addBinding = (name, value, element) => {
@@ -87,15 +76,20 @@ options.addBinding('numberOfBindings', 10, document.getElementById('numberOfBind
 options.addBoolean('showCorners', true, document.getElementById('showCorners'));
 
 
-
 const tagTracker = new TagTracker(options);
 
 tagTracker.on('track', function (event) {
   context.clearRect(0, 0, canvas.width, canvas.height);
-  
-  plotFeatures(this.bindings);
-  
-  event.data.forEach(drawMarker);
+
+  if (options.showCorners) {
+    const markers = [];
+    for (let i = 0; i < this.bindings.length - 1; i++) {
+      markers.push({ x: this.bindings[i], y: this.bindings[i + 1] });
+    }
+    plotMarkers(markers, 'red', 3);
+  }
+
+  plotMarkers(event.tags, 'yellow', 8);
 });
 
 const tracker = tracking.track('#video', tagTracker);

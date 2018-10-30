@@ -63,7 +63,7 @@ TagTracker.prototype.track = function(pixels, width, height) {
   });
 
   this.emit('track', {
-    data: results
+    tags: results
   });
 }
   
