@@ -82,8 +82,8 @@ const options = new function () {
 };
 
 options.addBinding('blur', 3, document.getElementById('blur'));
-options.addBinding('fastThreshold', 10, document.getElementById('threshold'));
-options.addBinding('numberOfBindings', 4, document.getElementById('numberOfBindings'));
+options.addBinding('fastThreshold', 40, document.getElementById('threshold'));
+options.addBinding('numberOfBindings', 10, document.getElementById('numberOfBindings'));
 options.addBoolean('showCorners', true, document.getElementById('showCorners'));
 
 
