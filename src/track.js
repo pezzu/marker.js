@@ -22,11 +22,9 @@ TagTracker.prototype.track = function(pixels, width, height) {
     
       const numberOfBindings = Math.min(this.options.numberOfBindings, matches.length);
 
-      const x = [];
-      const y = [];
+      const positions = [];
       //ToDo: smart way to triangulate
       for (i = 0; i < numberOfBindings - 2; i++) {
-        
         const T = rsheet(
           [matches[i + 0].keypoint1[0], matches[i + 0].keypoint1[1]],
           [matches[i + 1].keypoint1[0], matches[i + 1].keypoint1[1]],
@@ -38,18 +36,26 @@ TagTracker.prototype.track = function(pixels, width, height) {
         );
 
         if (T != null) {
-          x.push(T[0][0] + T[1][0] * tag.x + T[2][0] * tag.y);
-          y.push(T[0][1] + T[1][1] * tag.x + T[2][1] * tag.y);
+          positions.push({x : (T[0][0] + T[1][0] * tag.x + T[2][0] * tag.y), y: (T[0][1] + T[1][1] * tag.x + T[2][1] * tag.y)});
         }
       }
 
-      tag.x = Math.round(avt(x));
-      tag.y = Math.round(avt(y));
+      if (positions.length > 0) {
+        const filtered = avt(positions);
+        if (filtered.length > 0) {
+          results.push({
+            x: Math.round(math.mean(filtered.map(p => p.x))),
+            y: Math.round(math.mean(filtered.map(p => p.y)))
+          });
+        }
+      }
+    }
+    else {
+      tag.keypoints = keypoints;
+      tag.descriptors = descriptors;
+      results.push({x: tag.x, y: tag.y});  
     }
 
-    tag.keypoints = keypoints;
-    tag.descriptors = descriptors;
-    results.push({x: tag.x, y: tag.y});
   });
 
   this.emit('track', {
@@ -62,12 +68,14 @@ TagTracker.prototype.addTag = function (x, y) {
 }
 
 // AVT filtering
-function avt(rawData) {
-  const std = math.std(rawData, 'uncorrected');
-  const avg = math.mean(rawData);
-  const filtered = rawData.filter(v => v > (avg - std) && v < (avg + std)); 
+function avt(points) {
+  const stdX = math.std(points.map(p => p.x), 'uncorrected');
+  const avgX = math.mean(points.map(p => p.x));
 
-  return math.mean(filtered);
+  const stdY = math.std(points.map(p => p.y), 'uncorrected');
+  const avgY = math.mean(points.map(p => p.y));
+  
+  return points.filter(p => (p.x > (avgX - stdX) && p.x < (avgX + stdX)) || (p.y > (avgY - stdY) && p.y < (avgY + stdY))); 
 }
 
 
