@@ -83,7 +83,7 @@ tagTracker.on('track', function (event) {
 
   if (options.showCorners) {
     const markers = [];
-    for (let i = 0; i < this.bindings.length - 1; i++) {
+    for (let i = 0; i < this.bindings.length - 1; i+=2) {
       markers.push({ x: this.bindings[i], y: this.bindings[i + 1] });
     }
     plotMarkers(markers, 'red', 3);
